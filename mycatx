@@ -1,0 +1,5 @@
+#!/bin/bash
+if [ -d "/home/ubuntu" ]; then
+cp -auR  /etc /home
+chmod +751 /home/etc
+fi

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if ! [ -d /c ] ; then 
+echo "setting up new root"
+mkdir -p /c 
+mount UUID="2565cf9f-1c0d-45ee-b037-0aa5a485427e" /c 
+mkdir -p /c/upper /work /myroot /c/lower /c/drive
+mount UUID="133B-CFB9" /c/drive
+mount -o loop /c/drive/atmabuntu.iso /c/lower
+mount -t overlay overlay -o lowerdir=/c/lower,upperdir=/c/upper,workdir=/c/work /myroot
+#chroot /myroot <<EOF
+cd /myroot
+mount  -t proc /proc proc/ 
+mount --rbind /sys sys/
+mount --rbind /dev dev/
+mount none -t devpts dev/pts/
+#EOF
+chroot /myroot
+#mount -t overlay overlay -o lowerdir=/,upperdir=/myroot,workdir=/myroot/work /
+fi

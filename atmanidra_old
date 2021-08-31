@@ -1,0 +1,98 @@
+#!/bin/bash
+v1=`whoami`
+v2="root"
+if [ "$v1" == "$v2" ]; then
+echo "Starting hibernation"
+
+swp=`blkid | grep swap |  tail -1 | awk '{print $2;}'`
+ptn=`blkid | grep swap |  tail -1 | awk '{print $1;}'| grep \sd[b-f]`
+echo "$ptn"
+if [ !  -n "$swp" ];then
+echo "Sorry, please activate your swap drive... Can't continue!"
+else
+swp2=`grep GRUB_CMDLINE_LINUX_DEFAULT  /etc/default/grub`
+new=`echo $swp2 | grep $swp`
+echo "$swp"
+echo "$swp2"
+echo "$new"
+if [ ! -n "$new" ]; then
+if [  -n "$ptn" ]; then
+echo "Setting  swap on ${ptn%?}" 
+swapoff -a
+swapon "$swp"
+pttn=`mount | grep "${ptn%??}" | awk '{print $3;}'`
+for i in $pttn;do if [ -n `ls $i | grep "usr"` ]; then pptn=$i; fi;  done
+echo $pptn
+if [   -n "$pptn" ]; then
+echo "Changing root to $pptn"
+chroot "$pptn" /bin/bash  <<EOF
+rswp="sed 's/$swp2/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash resume=$swp\"/g' /etc/default/grub"
+sudo echo "$rswp" > /tmp/swscr.sh
+chmod +x /tmp/swscr.sh
+sudo bash -e /tmp/swscr.sh > /tmp/grub_new
+sudo mv /tmp/grub_new /etc/default/grub
+update-grub
+sudo rm /tmp/swscr.sh
+# write the resume UUID (make sure to replace this with your UUID)
+echo RESUME=$swp   | sudo tee /etc/initramfs-tools/conf.d/resume
+
+# regenerate initramfs
+update-initramfs -c -k all
+EOF
+fi
+echo "
+[Re-enable hibernate by default in upower]
+Identity=unix-user:*
+Action=org.freedesktop.upower.hibernate
+ResultActive=yes
+
+[Re-enable hibernate by default in logind]
+Identity=unix-user:*
+Action=org.freedesktop.login1.hibernate;org.freedesktop.login1.handle-hibernate-key;org.freedesktop.login1;org.freedesktop.login1.hibernate-multiple-sessions;org.freedesktop.login1.hibernate-ignore-inhibit
+ResultActive=yes
+" > /etc/polkit-1/localauthority/50-local.d/com.ubuntu.enable-hibernate.pkla
+echo "All Done"
+#sudo hibernate-disk &
+systemctl hibernate &
+
+else
+
+rswp="sed 's/$swp2/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash resume=$swp\"/g' /etc/default/grub"
+sudo echo "$rswp" > /tmp/swscr.sh
+chmod +x /tmp/swscr.sh
+sudo bash -e /tmp/swscr.sh > /tmp/grub_new
+sudo mv /tmp/grub_new /etc/default/grub
+update-grub
+sudo rm /tmp/swscr.sh
+
+# write the resume UUID (make sure to replace this with your UUID)
+echo RESUME=$swp   | sudo tee /etc/initramfs-tools/conf.d/resume
+
+# regenerate initramfs
+update-initramfs -c -k all
+
+
+echo "
+[Re-enable hibernate by default in upower]
+Identity=unix-user:*
+Action=org.freedesktop.upower.hibernate
+ResultActive=yes
+
+[Re-enable hibernate by default in logind]
+Identity=unix-user:*
+Action=org.freedesktop.login1.hibernate;org.freedesktop.login1.handle-hibernate-key;org.freedesktop.login1;org.freedesktop.login1.hibernate-multiple-sessions;org.freedesktop.login1.hibernate-ignore-inhibit
+ResultActive=yes
+" > /etc/polkit-1/localauthority/50-local.d/com.ubuntu.enable-hibernate.pkla
+echo "All Done"
+fi
+fi
+swapoff -a
+swapon $swp
+echo "Saving to $swp"
+#sudo hibernate-disk &
+systemctl hibernate &
+fi
+else
+echo "You need to be root to run atmanidra"
+
+fi

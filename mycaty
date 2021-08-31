@@ -1,0 +1,30 @@
+#!/bin/bash
+echo "setting up new root"
+swp=`blkid | grep ext4 |  tail -1 | awk '{print $2;}'`
+ptn=`blkid | grep ext4 |  tail -1 | awk '{print $1;}'| grep \sd[b-f]`
+if [ !  -n "$swp" ];then
+echo "Sorry, Could not find a suitable space to save! Please create a suitable ext4 4th partition in your USB"
+else
+if [  -n "$ptn" ]; then
+pttn="${ptn%?}"
+mntd=`mount | grep  "$pttn" | grep "/home"`
+if [ -z  "$mntd" ]; then
+mount $pttn /mnt
+if [  -d "/home/ubuntu" ];then if [ -x "/usr/bin/ubiquity"  ]; then
+cp -auR /home/ubuntu /mnt
+umount /mnt
+echo "Setting save folder on $pttn" 
+mount $pttn /home
+for i in `ls /home/etc/`;do
+I=`wc -c /home/etc/$i | cut -d' ' -f1`
+J=`wc -c /etc/$i | cut -d' ' -f1`
+if [ $I -gt $J ]; then
+cp  /home/etc/$i  /etc/$i
+fi
+done
+chmod +755 /etc
+fi
+fi
+fi
+fi
+fi

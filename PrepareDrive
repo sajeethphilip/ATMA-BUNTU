@@ -1,0 +1,98 @@
+#!/usr/bin/bash
+#-------------------------------
+# author: Ninan Sajeeth Philip
+# airis4d.com
+# Onam 2021 release
+#-------------------------------
+echo "------------------------------------------------"
+echo "      Specify pendrive device: eg. /dev/sdb     "
+echo "   Beware: All data on the dvice will be lost!  "
+echo " "
+echo "  IN CASE OF ANY DOUBT, WATCH VIDEO TUTORIAL "
+echo " "
+echo "            Press Ctrl-C to abort              "
+echo " "
+echo " The live CD has testdisk installed that can be "
+echo "   used to recover any accidental formatting"
+echo " "
+echo "    BUT BE AWARE THAT IT IS NOT FOOL PROOF "
+echo " "
+echo "------------------------------------------------"
+echo " "
+echo " "
+echo " Please specify pendrive (eg: /dev/sdb) (Ctrl-C to abort) :"
+read drvn
+umount "$drvn"*
+echo " Please answer Y to questions that will appear below"
+sleep 10
+{
+echo p;
+echo d;
+echo 1;
+echo d
+echo 2
+echo d;
+echo 3;
+echo d;
+echo 4;
+echo w;
+echo ;
+} | fdisk "$drvn"
+{
+echo n;
+echo p;
+echo ;
+echo ;
+echo +512M;
+echo t;
+echo 1;
+echo ef;
+echo n;
+echo p;
+echo ;
+echo ;
+echo +16G;
+echo t;
+echo 2;
+echo 83;
+echo n;
+echo p;
+echo ;
+echo ;
+echo +4G
+echo t;
+echo 3;
+echo 82;
+echo n;
+echo p;
+echo ;
+echo ;
+echo ;
+echo t;
+echo 4;
+echo 83;
+echo w;
+echo ;
+} | fdisk "$drvn"
+mkfs.vfat "$drvn"1
+mkfs.ext4 "$drvn"2 
+mkswap "$drvn"3
+mkfs.ext4 "$drvn"4
+echo "------------------------------------------------------------------"
+echo " "
+echo "   The following partitions are made and formatted on drive $drvn"
+echo " "
+echo " -----------------------------------------------------------------"
+fdisk -l "$drvn"
+echo " -----------------------------------------------------------------"
+echo " "
+echo " Make sure that you use the same drive $drvn to install the system"
+echo "        First partition of $drvn is to be mounted as /efi" 
+echo "        Second  partition of $drvn as /" 
+echo "        Third  partition of $drvn as swap" 
+echo "        Forth  partition of $drvn as /home" 
+echo " "
+echo "------------------------------------------------------------------"
+sleep 10
+ubiquity
+echo "All Done"

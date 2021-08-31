@@ -1,0 +1,20 @@
+#!/bin/bash
+if ! [ -d "/overlay" ]; then
+echo "setting up new root"
+swp=`blkid | grep ext4 |  tail -1 | awk '{print $2;}'`
+ptn=`blkid | grep ext4 |  tail -1 | awk '{print $1;}'| grep \sd[b-f]`
+if [ !  -n "$swp" ];then
+echo "Sorry, Could not find a suitable space to save! Please create a suitable ext4 4th partition in your USB"
+else
+if [  -n "$ptn" ]; then
+pttn= ${ptn%?}
+echo "Setting save folder on $pttn" 
+#echo "overlayroot=${ptn}swap=1,recurse=0" >/etc/overlayroot.conf
+mkdir -p /overlay/old /overlay/changes /overlay/work
+mount $pttn /overlay
+ln -sf /media/ubuntu/ATMABUNTU/casper/filesystem.squashfs /overlay/old/filesystem.squashfs
+mount -t overlay overlay -olowerdir=/overlay/old/filesystem.squashfs,upperdir=overlay/changes,workdir=/overlay/work /mnt
+chroot /mnt
+fi
+fi
+fi
