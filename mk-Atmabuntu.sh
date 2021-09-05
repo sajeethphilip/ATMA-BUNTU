@@ -1,5 +1,5 @@
 @!/bin/bash
-if [ -z $1 ]; then
+if ! [ -z $1 ]; then
 if [ "$1" == "Fresh" ];  then
 ./mkU1.sh
 else
